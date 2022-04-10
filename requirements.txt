@@ -1,0 +1,13 @@
+numpy
+scikit-learn
+scipy
+matplotlib
+pylint
+autopep8
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.10.2
+torchvision==0.11.3
+requests
+pandas
+mlxtend
+backpack-for-pytorch==1.3.0
