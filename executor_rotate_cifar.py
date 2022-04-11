@@ -314,7 +314,7 @@ class RotateCifarExecutor(AbstractExecutor):
             if round_idx % 10 == 0 and round_idx > 5:
                 self.logger.log(learning_rate)
                 path = 'cifar-{}-restart-{}-output_checkpoint{}'.format(
-                    algorithm, restart, str(round_idx))
+                    algorithm, restart + 1, str(round_idx))
                 self.logger.log(global_model.state_dict())
                 torch.save({'global_model': global_model.state_dict(),
                             'best_model': best_model.state_dict(),
