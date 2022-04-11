@@ -139,8 +139,8 @@ class RotatedCifarDataLoader(AbstractDataLoader):
                                            degrees=(from_angle, to_angle)),
                                        transforms.ToTensor()])
 
-        # images = images[:, ::2, ::2, :]
-        x = torch.zeros(len(images), 3, 32, 32)
+        images = images[:, ::2, ::2, :]
+        x = torch.zeros(len(images), 3, 16, 16)
         for i in range(len(images)):
             x[i] = rotation(images[i])
 
