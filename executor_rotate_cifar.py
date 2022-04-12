@@ -92,17 +92,17 @@ class RotateCifarExecutor(AbstractExecutor):
             self.logger.log('########################################')
             self.logger.log('\n')
 
-            # 1. Load global params
+            """ 1. Load global params """
             global_params = global_model.state_dict()
 
-            # 2. Federated training
+            """ 2. Federated training """
             train_loss_history, train_acc_history = [], []
             test_loss_history, test_acc_history = [], []
             model_grads_history, grads_variance_history = [], []
 
             for client in clients:
 
-                train_history, test_history, dict_grad_statistics = client.train(
+                train_history, test_history, grad_variance, model_grads = client.train(
                     global_model, global_optimizer, round_idx, flags)
 
                 train_loss, train_acc = train_history
@@ -114,14 +114,8 @@ class RotateCifarExecutor(AbstractExecutor):
                 test_loss_history.append(test_loss)
                 test_acc_history.append(test_acc)
 
-                if "hybrid" in algorithm.split("_"):
-                    grad_variance, model_grads = dict_grad_statistics
-                    grads_variance_history.append(grad_variance)
-                    model_grads_history.append(model_grads)
-                elif "fishr" in algorithm.split("_"):
-                    grads_variance_history.append(dict_grad_statistics)
-                else:
-                    model_grads_history.append(dict_grad_statistics)
+                grads_variance_history.append(grad_variance)
+                model_grads_history.append(model_grads)
 
             final_train_loss = torch.stack(train_loss_history).mean()
             final_train_acc = sum(train_acc_history) / len(train_acc_history)
@@ -130,27 +124,23 @@ class RotateCifarExecutor(AbstractExecutor):
             final_test_acc = sum(test_acc_history) / len(test_acc_history)
 
             final_train_loss_np = final_train_loss.detach().cpu().numpy().copy()
-            final_train_acc_np = final_train_acc
             final_test_loss_np = final_test_loss.detach().cpu().numpy().copy()
-            final_test_acc_np = final_test_acc
 
             final_train_loss_history.append(final_train_loss_np)
-            final_train_acc_history.append(final_train_acc_np)
+            final_train_acc_history.append(final_train_acc)
             final_test_loss_history.append(final_test_loss_np)
-            final_test_acc_history.append(final_test_acc_np)
+            final_test_acc_history.append(final_test_acc)
 
-            # 3. Arithmetic mean / geometric mean
+            """ 3. Arithmetic mean / geometric mean """
             if "arith" in algorithm.split("_") and "fishr" not in algorithm.split("_"):
                 global_optimizer.zero_grad()
                 compute_arith_mean(
                     list(global_model.parameters()), model_grads_history)
                 global_optimizer.step()
 
-                self.logger.log(">>>>>>>>> Arith mean learning rate:")
+                self.logger.log("Debug: Arith mean learning rate:")
                 for param_group in global_optimizer.param_groups:
                     self.logger.log(param_group['lr'])
-
-                # global_scheduler.step()
 
             if "geo" in algorithm.split("_") and "fishr" not in algorithm.split("_"):
                 global_optimizer.zero_grad()
@@ -158,9 +148,14 @@ class RotateCifarExecutor(AbstractExecutor):
                                  model_grads_history, algorithm, 0.001)
                 global_optimizer.step()
 
-            # 4. Update global parameter based on gradients
+                self.logger.log("Debug: Geo mean learning rate:")
+                for param_group in global_optimizer.param_groups:
+                    self.logger.log(param_group['lr'])
+
+            """ 4. Fishr """
             if "fishr" in algorithm.split("_"):
 
+                # Fishr loss
                 dict_grad_statistics_averaged = {}
 
                 first_dict_grad_statistics = grads_variance_history[0]
@@ -174,106 +169,55 @@ class RotateCifarExecutor(AbstractExecutor):
                     dict_grad_statistics_averaged[name] = torch.stack(
                         grads_list, dim=0).mean(dim=0)
 
-                fishr_penalty = 0
+                fishr_loss = 0
                 for dict_grad_statistics in grads_variance_history:
-                    fishr_penalty += l2_between_dicts(
+                    fishr_loss += l2_between_dicts(
                         dict_grad_statistics, dict_grad_statistics_averaged)
 
+                penalty_weight = (
+                    penalty_weight_factor if round_idx >= penalty_anneal_iters else penalty_weight)
+
+                if penalty_weight > 1.0:
+                    model_grads_history = model_grads_history / penalty_weight
+                else:
+                    fishr_loss *= penalty_weight
+
+                self.logger.log("Fishr loss: {}".format(fishr_loss))
+
+                # Fishr Gradients
+                fishr_gradients = []
+
+                global_optimizer.zero_grad()
+                fishr_loss.backward()
+
+                for model_param in list(global_model.parameters()):
+                    grad = model_param.grad
+                    grad_copy = copy.deepcopy(grad.detach())
+                    fishr_gradients.append(grad_copy)
+
+                # Model Gradients
+                model_gradients = []
+
+                global_optimizer.zero_grad()
                 if "hybrid" in algorithm.split("_"):
-
-                    # Hybrid fishr
-                    weight_norm = torch.tensor(0.)
-                    if torch.cuda.is_available():
-                        weight_norm = torch.tensor(0.).cuda()
-                    for w in global_model.parameters():
-                        grad = w.grad
-                        weight_norm += w.norm().pow(2)
-
-                    # if round_idx % 10 == 0 and round_idx != 0:
-                    #     penalty_weight *= 1.01
-                    # self.logger.log("***** Penalty weight: {}".format(penalty_weight))
-                    # penalty_weight = (penalty_weight_factor if round_idx >= penalty_anneal_iters else 1.0)
-
-                    # loss = weight_decay * weight_norm + penalty_weight * fishr_penalty
-                    # loss = penalty_weight * fishr_penalty
-                    penalty_weight = (
-                        penalty_weight_factor if round_idx >= penalty_anneal_iters else penalty_weight)
-                    
-                    if penalty_weight > 1.0:
-                        model_grads_history = model_grads_history / penalty_weight
-                    else:
-                        loss = penalty_weight * fishr_penalty
-
-                    # Gradients computed by fishr loss
-                    global_optimizer.zero_grad()
-                    loss.backward()
-
-                    model_params = list(global_model.parameters())
-                    fishr_gradients = []
-                    for model_param in model_params:
-                        grad = model_param.grad
-                        grad_copy = copy.deepcopy(grad.detach())
-                        fishr_gradients.append(grad_copy)
-
-                    # First, update model using geometric mean
-                    global_optimizer.zero_grad()
+                    """ Inter-silo geometric mean """
                     compute_geo_mean(list(global_model.parameters()),
                                      model_grads_history, 'geo_weighted', 0.001)
-                    global_optimizer.step()
-
-                    self.logger.log(">>>>>>>>> Geo mean learning rate:")
-                    for param_group in global_optimizer.param_groups:
-                        self.logger.log(param_group['lr'])
-
-                    # Then, update model using fishr loss
-                    global_optimizer.zero_grad()
-                    updated_model_params = list(global_model.parameters())
-
-                    for param, grads in zip(updated_model_params, fishr_gradients):
-                        param.grad = grads
-
-                    global_optimizer.step()
-
-                    self.logger.log(">>>>>>>>> Fishr learning rate:")
-                    for param_group in global_optimizer.param_groups:
-                        self.logger.log(param_group['lr'])
-
-                    # global_scheduler.step()
-
                 else:
+                    compute_arith_mean(
+                        list(global_model.parameters()), model_grads_history)
 
-                    loss = final_train_loss.clone()
+                for model_param in list(global_model.parameters()):
+                    grad = model_param.grad
+                    grad_copy = copy.deepcopy(grad.detach())
+                    model_gradients.append(grad_copy)
 
-                    weight_norm = torch.tensor(0.)
-                    if torch.cuda.is_available():
-                        weight_norm = torch.tensor(0.).cuda()
-                    for w in global_model.parameters():
-                        grad = w.grad
-                        weight_norm += w.norm().pow(2)
-
-                    # loss += weight_decay * weight_norm
-
-                    self.logger.log('Before Loss: {}'.format(loss))
-                    penalty_weight = (
-                        penalty_weight_factor if round_idx >= penalty_anneal_iters else penalty_weight)
-
-                    loss += penalty_weight * fishr_penalty
-                    if penalty_weight > 1.0:
-                        # Rescale the entire loss to keep backpropagated gradients in a reasonable range
-                        loss /= penalty_weight
-                    self.logger.log('Fishr Loss: {}'.format(fishr_penalty))
-                    self.logger.log('After Loss: {}'.format(loss))
-
-                    # Vanilla fishr
-                    global_optimizer.zero_grad()
-                    loss.backward()
-                    global_optimizer.step()
-
-                    self.logger.log(">>>>>>>>> Fishr learning rate:")
-                    for param_group in global_optimizer.param_groups:
-                        self.logger.log(param_group['lr'])
-
-                    # global_scheduler.step()
+                # Update global model
+                global_gradients = [sum(x) for x in zip(
+                    fishr_gradients, model_gradients)]
+                for param, grads in zip(list(global_model.parameters()), global_gradients):
+                    param.grad = grads
+                global_optimizer.step()
 
             # 5. Evaluation
             ood_test_images, ood_test_labels = ood_validation["images"], ood_validation["labels"]
@@ -315,7 +259,7 @@ class RotateCifarExecutor(AbstractExecutor):
                 self.logger.log(learning_rate)
                 path = 'cifar-{}-restart-{}-output_checkpoint{}'.format(
                     algorithm, restart + 1, str(round_idx))
-                self.logger.log(global_model.state_dict())
+                # self.logger.log(global_model.state_dict())
                 torch.save({'global_model': global_model.state_dict(),
                             'best_model': best_model.state_dict(),
                             'best_round': best_round,

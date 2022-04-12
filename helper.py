@@ -32,7 +32,7 @@ def compute_grad_variance(input, labels, network, algorithm):
     # print('Real: {}'.format(labels))
     # calling first-order derivatives in the network while maintaining the per-sample gradients
 
-    with backpack(Variance(), SumGradSquared()):
+    with backpack(Variance()):
         loss.backward(
             inputs=list(network.parameters()), retain_graph=True, create_graph=True
         )
@@ -40,12 +40,7 @@ def compute_grad_variance(input, labels, network, algorithm):
     dict_grads_variance = {
         name: (
             weights.variance.clone().view(-1)
-            if "notcentered" not in algorithm.split("_") else
-            weights.sum_grad_squared.clone().view(-1)/input.size(0)
-        ) for name, weights in network.named_parameters() if (
-            "onlyextractor" not in algorithm.split("_") or
-            name not in ["4.weight", "4.bias"]
-        )
+        ) for name, weights in network.named_parameters()
     }
 
     return dict_grads_variance
