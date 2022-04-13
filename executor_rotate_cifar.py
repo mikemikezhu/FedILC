@@ -38,8 +38,11 @@ class RotateCifarExecutor(AbstractExecutor):
 
         algorithm = flags.algorithm
 
+        log_dir = "cifar-{}-restart {}".format(algorithm, restart + 1)
+        os.mkdir(log_dir)
+
         self.logger = FedLogger.getLogger(restart + 1,
-                                          "cifar-{}-restart {}".format(algorithm, restart + 1))
+                                          "{}/cifar-{}-restart {}".format(log_dir, algorithm, restart + 1))
         self.trainer.set_logger(self.logger)
 
         learning_rate = flags.learning_rate
@@ -255,10 +258,10 @@ class RotateCifarExecutor(AbstractExecutor):
             self.logger.log('########################################')
             self.logger.log('\n')
 
-            if round_idx % 10 == 0 and round_idx > 5:
+            if round_idx % 50 == 0 and round_idx > 5:
                 self.logger.log(learning_rate)
-                path = 'cifar-{}-restart-{}-output_checkpoint{}'.format(
-                    algorithm, restart + 1, str(round_idx))
+                path = '{}/cifar-{}-restart-{}-output_checkpoint{}'.format(
+                    log_dir, algorithm, restart + 1, str(round_idx))
                 # self.logger.log(global_model.state_dict())
                 torch.save({'global_model': global_model.state_dict(),
                             'best_model': best_model.state_dict(),
@@ -286,7 +289,8 @@ class RotateCifarExecutor(AbstractExecutor):
         plt.xlabel('Round')
         plt.ylabel('Loss')
         plt.legend(['Train Loss', 'Test Loss', 'OOD Test Loss'])
-        plt.savefig('loss-{}-restart {}.png'.format(algorithm, restart + 1))
+        plt.savefig('{}/loss-{}-restart {}.png'.format(log_dir,
+                    algorithm, restart + 1))
         plt.close()
 
         plt.title('Train & Test Accuracy')
@@ -298,7 +302,8 @@ class RotateCifarExecutor(AbstractExecutor):
         plt.xlabel('Round')
         plt.ylabel('Accuracy')
         plt.legend(['Train Accuracy', 'Test Accuracy', 'OOD Test Accuracy'])
-        plt.savefig('acc-{}-restart {}.png'.format(algorithm, restart + 1))
+        plt.savefig('{}/acc-{}-restart {}.png'.format(log_dir,
+                    algorithm, restart + 1))
         plt.close()
 
         self.logger.log("Best Loss: {}".format(best_loss))
