@@ -29,7 +29,7 @@ class Evaluator:
                 final_loss += loss
                 final_acc += acc
 
-                if len(labels) == test_batch_size:
+                if len(labels) == test_batch_size and 1.0 in torch.unique(labels) and 0.0 in torch.unique(labels):
                     roc = self.__helper.mean_roc_auc(logits, labels)
                     pr = self.__helper.mean_pr_auc(logits, labels)
                     if roc is not None:

@@ -19,13 +19,12 @@ def compute_irm_penalty(logits, y, loss_fn):
     return torch.sum(grad**2)
 
 
-def compute_grad_variance(input, labels, network, algorithm):
+def compute_grad_variance(input, labels, network, loss_fn):
     """
     Main Fishr method that computes the gradient variances using the BackPACK package.
     """
     logits = network(input)
-    # bce_extended = extend(nn.BCEWithLogitsLoss(reduction='sum'))
-    bce_extended = extend(nn.CrossEntropyLoss(reduction='sum'))
+    bce_extended = extend(loss_fn)
     loss = bce_extended(logits, labels)
 
     # print('Prediction: {}'.format(logits))

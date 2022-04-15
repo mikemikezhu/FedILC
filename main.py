@@ -10,11 +10,21 @@ import torch
 parser = argparse.ArgumentParser()
 
 """
-python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=101 --num_restarts=1 --learning_rate=0.0003
-python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=101 --num_restarts=1 --learning_rate=0.0003
-python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=501 --num_restarts=1 --penalty_weight_factor=0.3 --penalty_weight=0.3 --learning_rate=0.0003
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=501 --num_restarts=1 --penalty_weight_factor=0.3 --penalty_weight=0.3 --learning_rate=0.0003
+python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=501 --num_restarts=5 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=501 --num_restarts=5 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_hybrid --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
+
+python3 main.py --dataset=icu --algorithm=arith --num_rounds=2001 --num_restarts=1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=geo_weighted --num_rounds=2001 --num_restarts=1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr --num_rounds=2001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.5 --penalty_weight=0.5 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr_geo --num_rounds=2001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.5 --penalty_weight=0.5 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr_hybrid --num_rounds=2001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.5 --penalty_weight=0.5 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
 """
+
+# python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=1.0 --penalty_weight=1.0 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
+
 
 """ Select dataset """
 parser.add_argument(

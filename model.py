@@ -14,7 +14,7 @@ class CifarResNet(nn.Module):
         super(CifarResNet, self).__init__()
         self.network = torchvision.models.resnet18(pretrained=True)
         self.classifier = extend(nn.Linear(in_features=in_features,
-                                    out_features=out_features))
+                                           out_features=out_features))
 
     def forward(self, input):
 
@@ -53,5 +53,27 @@ class MnistMLP(nn.Module):
     def forward(self, input):
         out = self.prepare_input(input)
         features = self._main(out)
+        logits = self.classifier(features)
+        return features, torch.sigmoid(logits)
+
+
+"""ICU MLP"""
+
+
+class IcuMLP(nn.Module):
+
+    def __init__(self, in_features):
+        super(IcuMLP, self).__init__()
+        self.layer0 = nn.Linear(in_features, 32)
+        self.layer1 = nn.Linear(32, 64)
+        self.classifier = nn.Linear(64, 1)
+        self.dropout = nn.Dropout(0.1)
+        extend(self.classifier)
+
+    def forward(self, x):
+        x = torch.relu(self.layer0(x))
+        x = self.dropout(x)
+        x = torch.relu(self.layer1(x))
+        features = self.dropout(x)
         logits = self.classifier(features)
         return features, torch.sigmoid(logits)

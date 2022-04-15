@@ -9,7 +9,7 @@ class Trainer:
     def set_logger(self, logger):
         self.__logger = logger
 
-    def train_model(self, model, optimizer, local_model, local_optimizer, train_loader, train_images, train_labels, round_idx, flags):
+    def train_model(self, model, optimizer, local_model, local_optimizer, train_loader, train_images, train_labels, round_idx, loss_fn, flags):
 
         algorithm = flags.algorithm
 
@@ -54,7 +54,7 @@ class Trainer:
         # Fishr
         features, logits = model(train_images)
         grad_variance = compute_grad_variance(
-            features, train_labels, model.classifier, algorithm)
+            features, train_labels, model.classifier, loss_fn)
 
         # Calculate loss and accuracy
         train_loss = self.__evaluator_helper.mean_nll(logits, train_labels)
