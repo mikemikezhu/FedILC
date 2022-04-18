@@ -146,9 +146,10 @@ class RotateCifarExecutor(AbstractExecutor):
                     self.logger.log(param_group['lr'])
 
             if "geo" in algorithm.split("_") and "fishr" not in algorithm.split("_"):
+                
                 global_optimizer.zero_grad()
                 compute_geo_mean(list(global_model.parameters()),
-                                 model_grads_history, algorithm, 0.001)
+                                 model_grads_history, algorithm, 0.001, flags)
                 global_optimizer.step()
 
                 self.logger.log("Debug: Geo mean learning rate:")
@@ -205,7 +206,7 @@ class RotateCifarExecutor(AbstractExecutor):
                 if "hybrid" in algorithm.split("_"):
                     """ Inter-silo geometric mean """
                     compute_geo_mean(list(global_model.parameters()),
-                                     model_grads_history, 'geo_weighted', 0.001)
+                                     model_grads_history, 'geo_weighted', 0.001, flags)
                 else:
                     compute_arith_mean(
                         list(global_model.parameters()), model_grads_history)

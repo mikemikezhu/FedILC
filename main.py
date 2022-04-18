@@ -1,26 +1,36 @@
 from executor_color_mnist import ColorMNISTExecutor
 from executor_rotate_cifar import RotateCifarExecutor
+from executor_icu import IcuExecutor
 
 import argparse
 import torch
 
-# if not torch.cuda.is_available():
-#     raise Exception("Please use CUDA environment!")
+if not torch.cuda.is_available():
+    raise Exception("Please use CUDA environment!")
+
+import warnings
+warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser()
 
 """
-python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=501 --num_restarts=5 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=301 --num_restarts=1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
 python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=501 --num_restarts=5 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
 python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
 python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
 python3 main.py --dataset=rotate_cifar --algorithm=fishr_hybrid --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
 
-python3 main.py --dataset=icu --algorithm=arith --num_rounds=2001 --num_restarts=1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=geo_weighted --num_rounds=2001 --num_restarts=1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr --num_rounds=2001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.5 --penalty_weight=0.5 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr_geo --num_rounds=2001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.5 --penalty_weight=0.5 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr_hybrid --num_rounds=2001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.5 --penalty_weight=0.5 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=arith --num_rounds=2001 --num_restarts=3 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=geo_weighted --agreement_threshold=0.1 --num_rounds=2001 --num_restarts=1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr --num_rounds=2001 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr_geo --num_rounds=2001 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr_hybrid --num_rounds=2001 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+
+python3 main.py --dataset=icu --algorithm=arith --num_rounds=5001 --num_restarts=1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=geo_weighted --agreement_threshold=0.1 --num_rounds=5001 --num_restarts=1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr --num_rounds=5001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr_geo --num_rounds=5001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=icu --algorithm=fishr_hybrid --num_rounds=5001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
 """
 
 # python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=1.0 --penalty_weight=1.0 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
@@ -34,7 +44,7 @@ parser.add_argument(
     choices=[
         'color_mnist',
         'rotate_cifar',
-        'e_icu',
+        'icu',
     ]
 )
 
@@ -74,6 +84,8 @@ parser.add_argument('--penalty_anneal_iters', type=int, default=0)
 parser.add_argument('--penalty_weight_factor', type=float, default=1.0)
 parser.add_argument('--penalty_weight', type=float, default=1.0)
 
+""" Geo Mean """
+parser.add_argument('--agreement_threshold', type=float, default=0.1)
 
 flags = parser.parse_args()
 for k, v in sorted(vars(flags).items()):
@@ -83,7 +95,7 @@ dataset = flags.dataset
 
 # Find eligible executor based on dataset
 eligible_executor = None
-executors = [ColorMNISTExecutor(), RotateCifarExecutor()]
+executors = [ColorMNISTExecutor(), RotateCifarExecutor(), IcuExecutor()]
 
 for executor in executors:
     if executor.is_eligible_executor(dataset):

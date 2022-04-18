@@ -31,7 +31,7 @@ class Trainer:
             optimizer.zero_grad()
             if "geo" in algorithm.split("_"):
                 compute_geo_mean(list(model.parameters()),
-                                 total_param_gradients, "geo_weighted", 0.001)
+                                 total_param_gradients, "geo_weighted", 0.001, flags)
                 self.__logger.log("Calculate intra-silo geometric mean")
             elif "arith" in algorithm.split("_"):
                 compute_arith_mean(

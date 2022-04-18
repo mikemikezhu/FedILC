@@ -110,13 +110,13 @@ Geometric mean
 """
 
 
-def compute_geo_mean(model_params, total_param_gradients, algorithm, substitute):
+def compute_geo_mean(model_params, total_param_gradients, algorithm, substitute, flags):
 
     if "geo_substitute" == algorithm:
         compute_substitute_geo_mean(
             model_params, total_param_gradients, substitute)
     elif "geo_weighted" == algorithm:
-        compute_weighted_geo_mean(model_params, total_param_gradients)
+        compute_weighted_geo_mean(model_params, total_param_gradients, flags)
 
 
 def compute_substitute_geo_mean(model_params, total_param_gradients, substitute):
@@ -156,7 +156,7 @@ def compute_substitute_geo_mean(model_params, total_param_gradients, substitute)
         param.grad = substitute_prod_grad
 
 
-def compute_weighted_geo_mean(model_params, total_param_gradients):
+def compute_weighted_geo_mean(model_params, total_param_gradients, flags):
 
     param_gradients = [[] for _ in model_params]
 
@@ -197,4 +197,16 @@ def compute_weighted_geo_mean(model_params, total_param_gradients):
             torch.log(torch.abs(negative_gradients) + 1e-10), dim=0) / n_negative_envs_denominator)
 
         weighted_prod_grad = positive_prod_gradients - negative_prod_gradients
-        param.grad = weighted_prod_grad
+
+        # Mask
+        mask = torch.mean(sign_matrix, dim=0).abs(
+        ) >= flags.agreement_threshold
+        mask = mask.to(torch.float32)
+        assert mask.numel() == param.numel()
+
+        mask_t = (mask.sum() / mask.numel())
+        print(">>>>> Mask: {}".format(mask_t))
+        # final_mask = mask / (1e-10 + mask_t)
+        final_mask = mask
+
+        param.grad = final_mask * weighted_prod_grad
