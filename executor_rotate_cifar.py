@@ -64,13 +64,14 @@ class RotateCifarExecutor(AbstractExecutor):
         clients = self.__create_clients(
             train_envs, test_envs, train_batch_size, test_batch_size, learning_rate)
 
-        global_model = CifarResNet(1000, 10)
+        global_model = CifarCNN()
         if torch.cuda.is_available():
             global_model = global_model.to('cuda')
 
         global_optimizer = torch.optim.Adam(global_model.parameters(),
                                             lr=learning_rate,
                                             weight_decay=weight_decay)
+
         final_train_loss_history = []
         final_train_acc_history = []
         final_test_loss_history = []
@@ -146,7 +147,7 @@ class RotateCifarExecutor(AbstractExecutor):
                     self.logger.log(param_group['lr'])
 
             if "geo" in algorithm.split("_") and "fishr" not in algorithm.split("_"):
-                
+
                 global_optimizer.zero_grad()
                 compute_geo_mean(list(global_model.parameters()),
                                  model_grads_history, algorithm, 0.001, flags)
@@ -181,11 +182,11 @@ class RotateCifarExecutor(AbstractExecutor):
                 penalty_weight = (
                     penalty_weight_factor if round_idx >= penalty_anneal_iters else penalty_weight)
 
-                if penalty_weight > 1.0:
-                    model_grads_history = model_grads_history / penalty_weight
-                else:
-                    fishr_loss *= penalty_weight
-
+                # if penalty_weight > 1.0:
+                #     model_grads_history = [
+                #         [i / penalty_weight for i in grad] for grad in model_grads_history]
+                # else:
+                fishr_loss *= penalty_weight
                 self.logger.log("Fishr loss: {}".format(fishr_loss))
 
                 # Fishr Gradients
@@ -285,7 +286,7 @@ class RotateCifarExecutor(AbstractExecutor):
         plt.plot(final_train_loss_history, label='train_loss')
         plt.plot(final_test_loss_history, label='test_loss')
         plt.plot(final_ood_loss_history, label='ood_test_loss')
-        plt.ylim(0, 5)
+        plt.ylim(0, 3)
         plt.hlines(best_loss, 0, best_round, linestyles='dashed')
         plt.xlabel('Round')
         plt.ylabel('Loss')
@@ -330,18 +331,25 @@ class RotateCifarExecutor(AbstractExecutor):
         self.logger.log((cifar_val[0]).shape)
 
         train_client_1_env_1 = self.data_loader.make_environment(
-            cifar_train[0][:30000:6], cifar_train[1][:30000:6], from_angle=10, to_angle=10)
+            cifar_train[0][:30000:9], cifar_train[1][:30000:9], from_angle=10, to_angle=10)
         train_client_1_env_2 = self.data_loader.make_environment(
-            cifar_train[0][1:30001:6], cifar_train[1][1:30001:6], from_angle=25, to_angle=25)
+            cifar_train[0][1:30001:9], cifar_train[1][1:30001:9], from_angle=25, to_angle=25)
         train_client_1_env_3 = self.data_loader.make_environment(
-            cifar_train[0][2:30002:6], cifar_train[1][2:30002:6], from_angle=40, to_angle=40)
+            cifar_train[0][2:30002:9], cifar_train[1][2:30002:9], from_angle=40, to_angle=40)
 
         train_client_2_env_1 = self.data_loader.make_environment(
-            cifar_train[0][3:30003:6], cifar_train[1][3:30003:6], from_angle=60, to_angle=60)
+            cifar_train[0][3:30003:9], cifar_train[1][3:30003:9], from_angle=60, to_angle=60)
         train_client_2_env_2 = self.data_loader.make_environment(
-            cifar_train[0][4:30004:6], cifar_train[1][4:30004:6], from_angle=75, to_angle=75)
+            cifar_train[0][4:30004:9], cifar_train[1][4:30004:9], from_angle=75, to_angle=75)
         train_client_2_env_3 = self.data_loader.make_environment(
-            cifar_train[0][5:30005:6], cifar_train[1][5:30005:6], from_angle=90, to_angle=90)
+            cifar_train[0][5:30005:9], cifar_train[1][5:30005:9], from_angle=90, to_angle=90)
+
+        train_client_3_env_1 = self.data_loader.make_environment(
+            cifar_train[0][6:30006:9], cifar_train[1][6:30006:9], from_angle=-10, to_angle=-10)
+        train_client_3_env_2 = self.data_loader.make_environment(
+            cifar_train[0][7:30007:9], cifar_train[1][7:30007:9], from_angle=-40, to_angle=-40)
+        train_client_3_env_3 = self.data_loader.make_environment(
+            cifar_train[0][8:30008:9], cifar_train[1][8:30008:9], from_angle=-90, to_angle=-90)
 
         train_envs = [
             # Client 1 Train
@@ -349,22 +357,32 @@ class RotateCifarExecutor(AbstractExecutor):
                                            train_client_1_env_2, train_client_1_env_3]),
             # Client 2 Train
             self.data_loader.combine_envs([train_client_2_env_1,
-                                           train_client_2_env_2, train_client_2_env_3])
+                                           train_client_2_env_2, train_client_2_env_3]),
+            # Client 3 Train
+            self.data_loader.combine_envs([train_client_3_env_1,
+                                          train_client_3_env_2, train_client_3_env_3])
         ]
 
         test_client_1_env_1 = self.data_loader.make_environment(
-            cifar_train[0][30000::6], cifar_train[1][30000::6], from_angle=10, to_angle=10)
+            cifar_train[0][30000::9], cifar_train[1][30000::9], from_angle=10, to_angle=10)
         test_client_1_env_2 = self.data_loader.make_environment(
-            cifar_train[0][30001::6], cifar_train[1][30001::6], from_angle=25, to_angle=25)
+            cifar_train[0][30001::9], cifar_train[1][30001::9], from_angle=25, to_angle=25)
         test_client_1_env_3 = self.data_loader.make_environment(
-            cifar_train[0][30002::6], cifar_train[1][30002::6], from_angle=40, to_angle=40)
+            cifar_train[0][30002::9], cifar_train[1][30002::9], from_angle=40, to_angle=40)
 
         test_client_2_env_1 = self.data_loader.make_environment(
-            cifar_train[0][30003::6], cifar_train[1][30003::6], from_angle=60, to_angle=60)
+            cifar_train[0][30003::9], cifar_train[1][30003::9], from_angle=60, to_angle=60)
         test_client_2_env_2 = self.data_loader.make_environment(
-            cifar_train[0][30004::6], cifar_train[1][30004::6], from_angle=75, to_angle=75)
+            cifar_train[0][30004::9], cifar_train[1][30004::9], from_angle=75, to_angle=75)
         test_client_2_env_3 = self.data_loader.make_environment(
-            cifar_train[0][30005::6], cifar_train[1][30005::6], from_angle=90, to_angle=90)
+            cifar_train[0][30005::9], cifar_train[1][30005::9], from_angle=90, to_angle=90)
+
+        test_client_3_env_1 = self.data_loader.make_environment(
+            cifar_train[0][30006::9], cifar_train[1][30006::9], from_angle=-10, to_angle=-10)
+        test_client_3_env_2 = self.data_loader.make_environment(
+            cifar_train[0][30007::9], cifar_train[1][30007::9], from_angle=-40, to_angle=-40)
+        test_client_3_env_3 = self.data_loader.make_environment(
+            cifar_train[0][30008::9], cifar_train[1][30008::9], from_angle=-90, to_angle=-90)
 
         test_envs = [
             # Client 1 Validation
@@ -372,7 +390,10 @@ class RotateCifarExecutor(AbstractExecutor):
                                            test_client_1_env_3]),
             # Client 2 Validation
             self.data_loader.combine_envs([test_client_2_env_1,
-                                           test_client_2_env_2, test_client_2_env_3])
+                                           test_client_2_env_2, test_client_2_env_3]),
+            # Client 3 Validation
+            self.data_loader.combine_envs([test_client_3_env_1,
+                                          test_client_3_env_2, test_client_3_env_3])
         ]
 
         ood_validation = self.data_loader.make_environment(
@@ -400,7 +421,7 @@ class RotateCifarExecutor(AbstractExecutor):
                 test_images, test_labels, test_batch_size)
 
             # Each client has one local model
-            local_model = CifarResNet(1000, 10)
+            local_model = CifarCNN()
             client = FederatedClient(self.trainer, self.evaluator, client_id, local_model,
                                      train_loader, train_images, train_labels,
                                      test_loader, learning_rate, self.logger)

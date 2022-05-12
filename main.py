@@ -14,27 +14,34 @@ warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
 
 """
-python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=301 --num_restarts=1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=501 --num_restarts=5 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_hybrid --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=251 --num_restarts=5 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=251 --num_restarts=5 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=251 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001  --penalty_weight=0.0001 --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=251 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_arith --num_rounds=251 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0  --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_hybrid --num_rounds=251 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
 
-python3 main.py --dataset=icu --algorithm=arith --num_rounds=2001 --num_restarts=3 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=geo_weighted --agreement_threshold=0.1 --num_rounds=2001 --num_restarts=1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr --num_rounds=2001 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr_geo --num_rounds=2001 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr_hybrid --num_rounds=2001 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0005 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=301 --num_restarts=5 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=301 --num_restarts=5 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001  --penalty_weight=0.0001 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_arith --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0  --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_hybrid --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.01--train_batch_size=64 --test_batch_size=64
 
-python3 main.py --dataset=icu --algorithm=arith --num_rounds=5001 --num_restarts=1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=geo_weighted --agreement_threshold=0.1 --num_rounds=5001 --num_restarts=1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr --num_rounds=5001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr_geo --num_rounds=5001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
-python3 main.py --dataset=icu --algorithm=fishr_hybrid --num_rounds=5001 --num_restarts=1 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=256
+python3 main.py --dataset=color_mnist --algorithm=arith --num_rounds=301 --num_restarts=5 --learning_rate=0.0003 --weight_decay=0.01 --train_batch_size=32 --test_batch_size=32
+python3 main.py --dataset=color_mnist --algorithm=geo_weighted --num_rounds=301 --num_restarts=5 --learning_rate=0.0003 --weight_decay=0.01 --agreement_threshold=0.0 --train_batch_size=32 --test_batch_size=32
+python3 main.py --dataset=color_mnist --algorithm=fishr --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=15.0 --penalty_weight=15.0 --learning_rate=0.0003 --weight_decay=0.01 --train_batch_size=32 --test_batch_size=32
+python3 main.py --dataset=color_mnist --algorithm=fishr_geo --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=15.0 --penalty_weight=15.0 --agreement_threshold=0.0 --learning_rate=0.0003 --weight_decay=0.01 --train_batch_size=32 --test_batch_size=32
+python3 main.py --dataset=color_mnist --algorithm=fishr_arith --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=15.0--penalty_weight=15.0 --learning_rate=0.0003 --weight_decay=0.01 --train_batch_size=32 --test_batch_size=32
+python3 main.py --dataset=color_mnist --algorithm=fishr_hybrid --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=15.0 --penalty_weight=15.0 --agreement_threshold=0.0 --learning_rate=0.0003 --weight_decay=0.01 --train_batch_size=32 --test_batch_size=32
+
+python3 main.py --dataset=icu --algorithm=arith --num_rounds=301 --num_restarts=5 --learning_rate=0.0002 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=icu --algorithm=geo_weighted --num_rounds=301 --num_restarts=5 --agreement_threshold=0.0 --learning_rate=0.0002 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=icu --algorithm=fishr --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --learning_rate=0.0002 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=icu --algorithm=fishr_geo --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --agreement_threshold=0.0 --learning_rate=0.0002 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=icu --algorithm=fishr_arith --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --agreement_threshold=0.0  --learning_rate=0.0002 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=icu --algorithm=fishr_hybrid --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.1 --penalty_weight=0.1 --agreement_threshold=0.0 --learning_rate=0.0002 --train_batch_size=64 --test_batch_size=64
 """
-
-# python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=501 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=1.0 --penalty_weight=1.0 --learning_rate=0.0001 --train_batch_size=64 --test_batch_size=64
-
 
 """ Select dataset """
 parser.add_argument(
@@ -58,6 +65,7 @@ parser.add_argument(
         'geo_weighted',  # Geometric mean (weighted)
         'geo_substitute',  # Geometric mean (substituted)
         'fishr',  # Fishr
+        'fishr_arith',  # Inter-silo fishr + intra-silo arithmetic mean
         'fishr_geo',  # Inter-silo fishr + intra-silo geometric mean
         'fishr_hybrid',  # Inter-silo fishr + inter-silo geometric mean
     ]
@@ -85,7 +93,7 @@ parser.add_argument('--penalty_weight_factor', type=float, default=1.0)
 parser.add_argument('--penalty_weight', type=float, default=1.0)
 
 """ Geo Mean """
-parser.add_argument('--agreement_threshold', type=float, default=0.1)
+parser.add_argument('--agreement_threshold', type=float, default=0.0)
 
 flags = parser.parse_args()
 for k, v in sorted(vars(flags).items()):

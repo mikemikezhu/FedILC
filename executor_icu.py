@@ -10,6 +10,7 @@ from helper import *
 
 import random
 import torch
+from torch.optim.lr_scheduler import StepLR
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve
 from imblearn.over_sampling import RandomOverSampler
@@ -186,7 +187,8 @@ class IcuExecutor(AbstractExecutor):
                     penalty_weight_factor if round_idx >= penalty_anneal_iters else penalty_weight)
 
                 if penalty_weight > 1.0:
-                    model_grads_history = model_grads_history / penalty_weight
+                    model_grads_history = [
+                        [i / penalty_weight for i in grad] for grad in model_grads_history]
                 else:
                     fishr_loss *= penalty_weight
 
@@ -368,7 +370,7 @@ class IcuExecutor(AbstractExecutor):
             plt.ylabel('True Positive Rate')
             plt.legend()
             plt.savefig('{}/roc-{}-restart {}.png'.format(log_dir,
-                    algorithm, restart + 1))
+                                                          algorithm, restart + 1))
             plt.close()
 
         self.logger.log("Best Loss: {}".format(best_loss))
