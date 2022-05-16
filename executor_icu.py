@@ -10,7 +10,6 @@ from helper import *
 
 import random
 import torch
-from torch.optim.lr_scheduler import StepLR
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve
 from imblearn.over_sampling import RandomOverSampler
@@ -49,6 +48,8 @@ class IcuExecutor(AbstractExecutor):
         log_dir = "icu-{}-restart {}".format(algorithm, restart + 1)
         os.mkdir(log_dir)
 
+        # wandb.init(project='fedilc_icu', reinit=True)
+
         self.logger = FedLogger.getLogger(restart + 1,
                                           "{}/icu-{}-restart {}".format(log_dir, algorithm, restart + 1))
         self.trainer.set_logger(self.logger)
@@ -73,6 +74,8 @@ class IcuExecutor(AbstractExecutor):
         if torch.cuda.is_available():
             global_model = global_model.to('cuda')
 
+        # wandb.watch(global_model, log='all')
+
         global_optimizer = torch.optim.Adam(global_model.parameters(),
                                             lr=learning_rate,
                                             weight_decay=weight_decay)
@@ -83,6 +86,10 @@ class IcuExecutor(AbstractExecutor):
         final_ood_loss_history = []
         final_ood_acc_history = []
         final_ood_roc_history = []
+        final_ood_pr_history = []
+        final_weight_gradients_history = []
+        final_bias_gradients_history = []
+        final_fishr_loss_history = []
 
         best_model = None
         best_round = 0
@@ -182,15 +189,18 @@ class IcuExecutor(AbstractExecutor):
                 for dict_grad_statistics in grads_variance_history:
                     fishr_loss += l2_between_dicts(
                         dict_grad_statistics, dict_grad_statistics_averaged)
+                    
+                fishr_loss_copy = fishr_loss.detach().cpu().numpy().copy()
+                final_fishr_loss_history.append(fishr_loss_copy)
 
                 penalty_weight = (
                     penalty_weight_factor if round_idx >= penalty_anneal_iters else penalty_weight)
 
-                if penalty_weight > 1.0:
-                    model_grads_history = [
-                        [i / penalty_weight for i in grad] for grad in model_grads_history]
-                else:
-                    fishr_loss *= penalty_weight
+                # if penalty_weight > 1.0:
+                #     model_grads_history = [
+                #         [i / penalty_weight for i in grad] for grad in model_grads_history]
+                # else:
+                fishr_loss *= penalty_weight
 
                 self.logger.log("Fishr loss: {}".format(fishr_loss))
 
@@ -229,6 +239,14 @@ class IcuExecutor(AbstractExecutor):
                     param.grad = grads
                 global_optimizer.step()
 
+            weight_gradients = global_model.classifier.weight.grad
+            weight_gradients = weight_gradients.detach().cpu().numpy().copy()
+            final_weight_gradients_history.append(weight_gradients)
+
+            bias_gradients = global_model.classifier.bias.grad
+            bias_gradients = bias_gradients.detach().cpu().numpy().copy()
+            final_bias_gradients_history.append(bias_gradients)
+
             # 5. Evaluation
             ood_test_images, ood_test_labels = ood_validation["images"], ood_validation["labels"]
             ood_test_loader = self.data_loader.create_data_loader(
@@ -244,6 +262,7 @@ class IcuExecutor(AbstractExecutor):
             final_ood_loss_history.append(ood_test_loss_np)
             final_ood_acc_history.append(ood_test_acc_np)
             final_ood_roc_history.append(ood_test_roc)
+            final_ood_pr_history.append(odd_test_pr)
 
             if ood_test_loss < best_loss and round_idx > 5:
                 best_loss = ood_test_loss
@@ -265,6 +284,11 @@ class IcuExecutor(AbstractExecutor):
             self.logger.log('########################################')
             self.logger.log('\n')
 
+            # wandb.log({'ood_test_loss': ood_test_loss, 
+            #            'ood_test_acc': ood_test_acc,
+            #            'classifier weight gradients': weight_gradients, 
+            #            'classifier bias gradients': bias_gradients})
+
             if round_idx % 50 == 0 and round_idx > 5:
                 self.logger.log(learning_rate)
                 path = '{}/icu-{}-restart-{}-output_checkpoint{}'.format(
@@ -283,7 +307,12 @@ class IcuExecutor(AbstractExecutor):
                             'final_test_loss_history': final_test_loss_history,
                             'final_test_acc_history': final_test_acc_history,
                             'final_ood_loss_history': final_ood_loss_history,
-                            'final_ood_acc_history': final_ood_acc_history}, path)
+                            'final_ood_acc_history': final_ood_acc_history,
+                            'final_ood_roc_history': final_ood_roc_history,
+                            'final_ood_pr_history': final_ood_pr_history,
+                            'final_fishr_loss_history': final_fishr_loss_history,
+                            'final_weight_gradients_history': final_weight_gradients_history,
+                            'final_bias_gradients_history': final_bias_gradients_history}, path)
 
         best_loss = best_loss.cpu().numpy().copy()
         best_acc = best_acc.detach().cpu().numpy()
@@ -311,6 +340,24 @@ class IcuExecutor(AbstractExecutor):
         plt.ylabel('Accuracy')
         plt.legend(['Train Accuracy', 'Test Accuracy', 'OOD Test Accuracy'])
         plt.savefig('{}/acc-{}-restart {}.png'.format(log_dir,
+                    algorithm, restart + 1))
+        plt.close()
+
+        plt.title('Fishr Loss')
+        plt.plot(final_fishr_loss_history, label='fishr_loss')
+        plt.xlabel('Round')
+        plt.ylabel('Loss')
+        plt.legend(['Fishr Loss'])
+        plt.savefig('{}/fishr-{}-restart {}.png'.format(log_dir,
+                    algorithm, restart + 1))
+        plt.close()
+
+        plt.title('Classifier Gradients')
+        plt.plot(final_bias_gradients_history, label='classifier_gradients')
+        plt.xlabel('Round')
+        plt.ylabel('Gradients')
+        plt.legend(['Classifier Gradients'])
+        plt.savefig('{}/gradients-{}-restart {}.png'.format(log_dir,
                     algorithm, restart + 1))
         plt.close()
 

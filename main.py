@@ -14,19 +14,12 @@ warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
 
 """
-python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=251 --num_restarts=5 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=251 --num_restarts=5 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=251 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001  --penalty_weight=0.0001 --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=251 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_arith --num_rounds=251 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0  --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_hybrid --num_rounds=251 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.15 --train_batch_size=64 --test_batch_size=64
-
-python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=301 --num_restarts=5 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=301 --num_restarts=5 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001  --penalty_weight=0.0001 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_arith --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0  --learning_rate=0.0001 --weight_decay=0.01 --train_batch_size=64 --test_batch_size=64
-python3 main.py --dataset=rotate_cifar --algorithm=fishr_hybrid --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=0.0001 --penalty_weight=0.0001 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.01--train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=arith --num_rounds=301 --num_restarts=5 --learning_rate=0.0001 --weight_decay=0.001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=geo_weighted --num_rounds=301 --num_restarts=5 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=1.0 --penalty_weight=1.0 --learning_rate=0.0001 --weight_decay=0.001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_geo --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=1.0 --penalty_weight=1.0 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_arith --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=1.0 --penalty_weight=1.0 --agreement_threshold=0.0  --learning_rate=0.0001 --weight_decay=0.001 --train_batch_size=64 --test_batch_size=64
+python3 main.py --dataset=rotate_cifar --algorithm=fishr_hybrid --num_rounds=301 --num_restarts=5 --penalty_anneal_iters=0 --penalty_weight_factor=1.0 --penalty_weight=1.0 --agreement_threshold=0.0 --learning_rate=0.0001 --weight_decay=0.001 --train_batch_size=64 --test_batch_size=64
 
 python3 main.py --dataset=color_mnist --algorithm=arith --num_rounds=301 --num_restarts=5 --learning_rate=0.0003 --weight_decay=0.01 --train_batch_size=32 --test_batch_size=32
 python3 main.py --dataset=color_mnist --algorithm=geo_weighted --num_rounds=301 --num_restarts=5 --learning_rate=0.0003 --weight_decay=0.01 --agreement_threshold=0.0 --train_batch_size=32 --test_batch_size=32
