@@ -64,15 +64,11 @@ parser.add_argument(
     ]
 )
 
-parser.add_argument('--total_feature', type=int, default=2 * 14 * 14)
-
 parser.add_argument('--learning_rate', type=float, default=0.0001)
 parser.add_argument('--weight_decay', type=float, default=0.001)
 
 parser.add_argument('--train_batch_size', type=int, default=32)
 parser.add_argument('--test_batch_size', type=int, default=32)
-
-parser.add_argument('--hidden_dim', type=int, default=390)
 
 """ Federated Learning """
 parser.add_argument('--num_restarts', type=int, default=5)  # Total experiments
