@@ -29,20 +29,19 @@ class FederatedClient:
                                                 lr=learning_rate)
 
     # Train model
-
-    def train(self, global_model, global_optimizer, round_idx, flags):
+    def train(self, global_model, global_optimizer, round_idx, loss_fn, flags):
 
         # Start training
-        dict_grad_statistics = None
-        train_loss, train_acc, dict_grad_statistics = self.trainer.train_model(global_model,
-                                                                               global_optimizer,
-                                                                               self.local_model,
-                                                                               self.local_optimizer,
-                                                                               self.train_loader,
-                                                                               self.train_images,
-                                                                               self.train_labels,
-                                                                               round_idx,
-                                                                               flags)
+        train_loss, train_acc, grad_variance, model_grads = self.trainer.train_model(global_model,
+                                                                                     global_optimizer,
+                                                                                     self.local_model,
+                                                                                     self.local_optimizer,
+                                                                                     self.train_loader,
+                                                                                     self.train_images,
+                                                                                     self.train_labels,
+                                                                                     round_idx,
+                                                                                     loss_fn,
+                                                                                     flags)
         train_history = (train_loss, train_acc)
         self.logger.log('Client[{}], Round [{}], Loss: [{}], Accuracy: [{}]'.format(
             self.client_id, round_idx + 1, train_loss, train_acc))
@@ -53,4 +52,4 @@ class FederatedClient:
                                                      self.test_loader,
                                                      test_batch_size)
 
-        return train_history, test_history, dict_grad_statistics
+        return train_history, test_history, grad_variance, model_grads

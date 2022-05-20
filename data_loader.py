@@ -16,6 +16,7 @@ Data Loader Type
 class DataLoaderType(Enum):
     COLOR_MNIST = 0
     ROTATE_CIFAR = 1
+    ICU = 2
 
 
 """
@@ -139,8 +140,8 @@ class RotatedCifarDataLoader(AbstractDataLoader):
                                            degrees=(from_angle, to_angle)),
                                        transforms.ToTensor()])
 
-        # images = images[:, ::2, ::2, :]
-        x = torch.zeros(len(images), 3, 32, 32)
+        images = images[:, ::2, ::2, :]
+        x = torch.zeros(len(images), 3, 16, 16)
         for i in range(len(images)):
             x[i] = rotation(images[i])
 
@@ -159,6 +160,23 @@ class RotatedCifarDataLoader(AbstractDataLoader):
 
 
 """
+ICU
+"""
+
+
+class IcuDataLoader(AbstractDataLoader):
+
+    def combine_envs(self, envs):
+        raise Exception("Method is not supported!")
+
+    def make_environment(self, images, labels, **kwargs):
+        raise Exception("Method is not supported!")
+
+    def create_data_loader(self, x, y, batch_size):
+        return super().create_data_loader(x, y, batch_size)
+
+
+"""
 Data Loader Factory
 """
 
@@ -167,6 +185,7 @@ class DataLoaderFactory:
 
     __color_mnist = None
     __rotate_cifar = None
+    __icu = None
 
     @staticmethod
     def get_data_loader(type):
@@ -180,6 +199,11 @@ class DataLoaderFactory:
             if DataLoaderFactory.__rotate_cifar is None:
                 DataLoaderFactory.__rotate_cifar = RotatedCifarDataLoader()
             return DataLoaderFactory.__rotate_cifar
+
+        elif type == DataLoaderType.ICU:
+            if DataLoaderFactory.__icu is None:
+                DataLoaderFactory.__icu = IcuDataLoader()
+            return DataLoaderFactory.__icu
 
         else:
             raise Exception("Unsupported data loader type: {}".format(type))

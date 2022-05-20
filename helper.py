@@ -19,20 +19,19 @@ def compute_irm_penalty(logits, y, loss_fn):
     return torch.sum(grad**2)
 
 
-def compute_grad_variance(input, labels, network, algorithm):
+def compute_grad_variance(input, labels, network, loss_fn):
     """
     Main Fishr method that computes the gradient variances using the BackPACK package.
     """
     logits = network(input)
-    # bce_extended = extend(nn.BCEWithLogitsLoss(reduction='sum'))
-    bce_extended = extend(nn.CrossEntropyLoss(reduction='sum'))
+    bce_extended = extend(loss_fn)
     loss = bce_extended(logits, labels)
 
     # print('Prediction: {}'.format(logits))
     # print('Real: {}'.format(labels))
     # calling first-order derivatives in the network while maintaining the per-sample gradients
 
-    with backpack(Variance(), SumGradSquared()):
+    with backpack(Variance()):
         loss.backward(
             inputs=list(network.parameters()), retain_graph=True, create_graph=True
         )
@@ -40,12 +39,7 @@ def compute_grad_variance(input, labels, network, algorithm):
     dict_grads_variance = {
         name: (
             weights.variance.clone().view(-1)
-            if "notcentered" not in algorithm.split("_") else
-            weights.sum_grad_squared.clone().view(-1)/input.size(0)
-        ) for name, weights in network.named_parameters() if (
-            "onlyextractor" not in algorithm.split("_") or
-            name not in ["4.weight", "4.bias"]
-        )
+        ) for name, weights in network.named_parameters()
     }
 
     return dict_grads_variance
@@ -116,13 +110,13 @@ Geometric mean
 """
 
 
-def compute_geo_mean(model_params, total_param_gradients, algorithm, substitute):
+def compute_geo_mean(model_params, total_param_gradients, algorithm, substitute, flags):
 
     if "geo_substitute" == algorithm:
         compute_substitute_geo_mean(
             model_params, total_param_gradients, substitute)
     elif "geo_weighted" == algorithm:
-        compute_weighted_geo_mean(model_params, total_param_gradients)
+        compute_weighted_geo_mean(model_params, total_param_gradients, flags)
 
 
 def compute_substitute_geo_mean(model_params, total_param_gradients, substitute):
@@ -162,7 +156,7 @@ def compute_substitute_geo_mean(model_params, total_param_gradients, substitute)
         param.grad = substitute_prod_grad
 
 
-def compute_weighted_geo_mean(model_params, total_param_gradients):
+def compute_weighted_geo_mean(model_params, total_param_gradients, flags):
 
     param_gradients = [[] for _ in model_params]
 
@@ -203,4 +197,16 @@ def compute_weighted_geo_mean(model_params, total_param_gradients):
             torch.log(torch.abs(negative_gradients) + 1e-10), dim=0) / n_negative_envs_denominator)
 
         weighted_prod_grad = positive_prod_gradients - negative_prod_gradients
-        param.grad = weighted_prod_grad
+
+        # Mask
+        mask = torch.mean(sign_matrix, dim=0).abs(
+        ) >= flags.agreement_threshold
+        mask = mask.to(torch.float32)
+        assert mask.numel() == param.numel()
+
+        mask_t = (mask.sum() / mask.numel())
+        print(">>>>> Mask: {}".format(mask_t))
+        # final_mask = mask / (1e-10 + mask_t)
+        final_mask = mask
+
+        param.grad = final_mask * weighted_prod_grad
